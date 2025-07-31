@@ -33,9 +33,7 @@ async function authenticate() {
   token = res.data.id;
   console.log(chalk.green('[Auth] Token obtido:'), token);
   return token;
-}
-/// === REGISTRO DE INTEGRAÇÃO (WEBHOOK) COM UPDATE VIA POST E CRIAÇÃO VIA PATCH ===
-// === REGISTRO DE INTEGRAÇÃO (WEBHOOK) VIA PATCH /integrations ===
+
 async function registerWebhook() {
   const t = await authenticate();
   const config = { headers: { Authorization: t } };
