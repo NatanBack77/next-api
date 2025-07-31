@@ -40,9 +40,9 @@ async function registerWebhook() {
   const t = await authenticate();
   const config = { headers: { Authorization: t } };
   const payload = {
-    gateway: 'integration-test-15',
+    gateway: 'integration-test-16',
     webhook: true,
-    webhookConstraint: { metadata: { gateway: 'integration-test-15' } },
+    webhookConstraint: { metadata: { gateway: 'integration-test-16' } },
     metadata: { webhookUrl: WEBHOOK_URL, webhookVersion: 'v1.4', webhookTypes: ['channel-hangup'] }
   };
   try {
@@ -53,7 +53,7 @@ async function registerWebhook() {
     if (msg?.includes('already exists')) {
       const listRes = await axios.get(`${API4COM_BASE_URL}/integrations`, config);
       const items = Array.isArray(listRes.data) ? listRes.data : listRes.data.data;
-      const existing = items.find(i => i.metadata?.gateway === 'integration-test-15');
+      const existing = items.find(i => i.metadata?.gateway === 'integration-test-16');
       if (existing?.id) {
         await axios.patch(`${API4COM_BASE_URL}/integrations/${existing.id}`, payload, config);
         console.log(chalk.green('[Webhook] Integração existente atualizada'));
