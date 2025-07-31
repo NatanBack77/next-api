@@ -44,10 +44,12 @@ async function registerWebhook() {
 
   const gatewayName = 'integration-test-15';
   const payload = {
+
     gateway: gatewayName,
     webhook: true,
     webhookConstraint: { metadata: { gateway: gatewayName } },
     metadata: { webhookUrl: WEBHOOK_URL, webhookVersion: 'v1.8', webhookTypes: ['channel-answer', 'channel-hangup'] }
+
   };
   const existing = items.find(i => i.gateway === gatewayName);
   if (existing?.id) {
