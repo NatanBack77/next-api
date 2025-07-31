@@ -34,33 +34,43 @@ async function authenticate() {
   console.log(chalk.green('[Auth] Token obtido:'), token);
   return token;
 }
-
-// === REGISTRO DE INTEGRAÇÃO (WEBHOOK) ===
+/// === REGISTRO DE INTEGRAÇÃO (WEBHOOK) COM UPDATE VIA POST E CRIAÇÃO VIA PATCH ===
+// === REGISTRO DE INTEGRAÇÃO (WEBHOOK) VIA PATCH /integrations ===
 async function registerWebhook() {
   const t = await authenticate();
   const config = { headers: { Authorization: t } };
+  const listRes = await axios.get(`${API4COM_BASE_URL}/integrations`, config);
+  const items = Array.isArray(listRes.data) ? listRes.data : listRes.data.data;
+
+  const gatewayName = 'integration-test-15';
   const payload = {
-    gateway: 'integration-test-15',
+    gateway: gatewayName,
     webhook: true,
-    webhookConstraint: { metadata: { gateway: 'integration-test-15' } },
-    metadata: { webhookUrl: WEBHOOK_URL, webhookVersion: 'v1.4', webhookTypes: ['channel-hangup'] }
+    webhookConstraint: { metadata: { gateway: gatewayName } },
+    metadata: { webhookUrl: WEBHOOK_URL, webhookVersion: 'v1.8', webhookTypes: ['channel-answer', 'channel-hangup'] }
   };
+  const existing = items.find(i => i.gateway === gatewayName);
+  if (existing?.id) {
+    payload.id = existing.id;
+  }
+
   try {
-    await axios.patch(`${API4COM_BASE_URL}/integrations`, payload, config);
-    console.log(chalk.green('[Webhook] Integração configurada ou atualizada'));    
-  } catch (err) {
-    const msg = err.response?.data?.error?.message;
-    if (msg?.includes('already exists')) {
-      const listRes = await axios.get(`${API4COM_BASE_URL}/integrations`, config);
-      const items = Array.isArray(listRes.data) ? listRes.data : listRes.data.data;
-      const existing = items.find(i => i.metadata?.gateway === 'integration-test-15');
-      if (existing?.id) {
-        await axios.patch(`${API4COM_BASE_URL}/integrations/${existing.id}`, payload, config);
-        console.log(chalk.green('[Webhook] Integração existente atualizada'));
-        return;
-      }
+    await axios.patch(
+      `${API4COM_BASE_URL}/integrations`,
+      payload,
+      config
+    );
+    if (existing?.id) {
+      console.log(chalk.green(`[Webhook] Integração existente (${existing.id}) atualizada via PATCH`));
+      console.log(chalk.green('[Webhook] Payload atualizado:'), payload);
+    } else {
+      console.log(chalk.green('[Webhook] Nova integração criada via PATCH'));
     }
-    console.error(chalk.red('[Webhook] Erro ao configurar webhook:'), err.response?.data || err.message);
+  } catch (err) {
+    console.error(
+      chalk.red('[Webhook] Erro ao configurar integração:'),
+      err.response?.data || err.message
+    );
   }
 }
 
