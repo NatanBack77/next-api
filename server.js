@@ -33,7 +33,7 @@ async function authenticate() {
   token = res.data.id;
   console.log(chalk.green('[Auth] Token obtido:'), token);
   return token;
-
+}
 async function registerWebhook() {
   const t = await authenticate();
   const config = { headers: { Authorization: t } };
