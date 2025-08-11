@@ -124,6 +124,30 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /**
+ * Aguarda até encontrar no `db.webhooks` um evento do tipo `channel-answer`
+ * para o callId especificado, ou exceder o timeout.
+ */
+
+async function waitForCallActivation(callId, timeout = 10000, interval = 500) {
+  const start = Date.now();
+  return new Promise((resolve, reject) => {
+    (function poll() {
+      const found = db.webhooks.find(
+        w => w.data.callId === callId && w.data.event === 'channel-answer'
+      );
+      console.log(chalk.yellow(`[Poll] Verificando ativação da chamada ${callId}...`));
+      console.log(chalk.yellow(`[Poll] Encontrado: ${found ? 'Sim' : 'Não'}`));
+      if (found) return resolve();
+      if (Date.now() - start > timeout) {
+        return reject(new Error(`Timeout: callId ${callId} não ativou em ${timeout}ms`));
+      }
+      setTimeout(poll, interval);
+    })();
+  });
+}
+
+
+/**
  * @swagger
  * /users:
  *   post:
@@ -499,6 +523,7 @@ app.get('/call', (req, res) => {
 app.post('/calls/:id/hangup', async (req, res) => {
   const { id } = req.params;
   try {
+    await waitForCallActivation(id);
     const t = await authenticate();
     const response = await axios.post(`${API4COM_BASE_URL}/calls/${id}/hangup`, {}, { headers: { Authorization: t } });
     console.log(chalk.blue(`[Hangup] Chamada ${id} encerrada com sucesso:`), response.data);
