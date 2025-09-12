@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    container_name: users_api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-supersegredo123}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1h}
+      - DB_PATH=/app/data/database.sqlite
+      - PORT=3000
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
